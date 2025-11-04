@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Oil Recycler</title>
+    <link rel="icon" type="image/png" href="worimage.png">
+    <style>
+        /* --- General Setup & Fonts --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --oil-color: #FFC107; /* A golden-yellow for the oil */
+            --dark-bg: #121212;   /* A very dark grey, not pure black */
+            --light-text: #F5F5F5;
+            --dark-text: #212121;
+            --accent-green: #4CAF50;
+            --accent-red: #F44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            overflow-x: hidden;
+        }
+
+        /* --- Oil Fill Animation --- */
+        #oil-fill-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0; /* JS will change this */
+            z-index: -1;
+            transition: height 0.1s ease-out;
+        }
+
+        #oil-fill-svg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .oil-wave {
+            fill: var(--oil-color);
+        }
+
+        /* --- General Section Styling --- */
+        .section {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 5%;
+            position: relative;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, p, li, span, div {
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        h1, h2, h3 {
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        h1 { font-size: 3.5rem; }
+        h2 { font-size: 2.8rem; }
+        h3 { font-size: 1.8rem; }
+
+        /* --- Scroll-based Fade-in Animations --- */
+        .reveal {
+            position: relative;
+            opacity: 0;
+            transform: translateY(100px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Hero Section --- */
+        #hero .recycler-image {
+            max-width: 60%;
+            max-height: 60vh;
+            margin-top: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+        
+        /* --- Problem Statement Section --- */
+        #problem-statement .stats-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            width: 300px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-number { font-size: 3rem; font-weight: 700; color: var(--oil-color); }
+        .stat-text { font-size: 1.1rem; margin-top: 10px; }
+
+        /* --- Problem vs Solution Section --- */
+        #problem-solution .container { display: flex; justify-content: center; gap: 5%; width: 100%; max-width: 1200px; }
+        .column { width: 45%; padding: 30px; border-radius: 15px; }
+        .problem-col { background: rgba(244, 67, 54, 0.1); border: 2px solid var(--accent-red); }
+        .solution-col { background: rgba(76, 175, 80, 0.1); border: 2px solid var(--accent-green); }
+        .column h3 { margin-bottom: 25px; }
+        .column ul { list-style: none; text-align: left; }
+        .column li { font-size: 1.2rem; margin-bottom: 20px; display: flex; align-items: center; }
+        .column .icon { font-size: 1.5rem; margin-right: 15px; text-shadow: none; }
+        .problem-col .icon { color: var(--accent-red); }
+        .solution-col .icon { color: var(--accent-green); }
+
+        /* --- Our Solution Section --- */
+        #solution-intro .flow-container { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; margin-top: 40px; }
+        .io-box { width: 25%; text-align: center; }
+        .io-box h3 { margin-bottom: 15px; }
+        .io-image { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--oil-color); box-shadow: 0 0 20px rgba(255, 193, 7, 0.7); margin: auto; overflow: hidden; }
+        .io-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .recycler-diagram { width: 30%; max-width: 300px; }
+        .flow-arrow { font-size: 4rem; color: var(--light-text); text-shadow: none;}
+        
+        /* --- CATCHY MARKETING SECTION --- */
+        #worries-solved .questions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; width: 100%; max-width: 1200px; margin: 40px 0; }
+        .question-card { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; text-align: center; transform: translateY(50px) scale(0.9); opacity: 0; transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.6s ease, box-shadow 0.3s ease; transition-delay: var(--delay); }
+        .reveal.visible .question-card { transform: translateY(0) scale(1); opacity: 1; }
+        .question-card:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 0 30px rgba(255, 193, 7, 0.4); }
+        .question-card .icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+        .question-card p { font-size: 1.1rem; line-height: 1.6; opacity: 0.9; }
+        .reassurance { font-size: 2rem; font-weight: 600; margin-bottom: 20px; color: var(--light-text); }
+        .final-solution { font-size: 2.2rem; font-weight: 700; }
+        .final-solution .highlight-text { color: transparent; background: linear-gradient(90deg, var(--light-text) 0%, var(--oil-color) 50%, var(--light-text) 100%); background-size: 200% 100%; background-clip: text; -webkit-background-clip: text; animation: shimmer 4s infinite linear; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* --- Use Cases Section --- */
+        #use-cases .use-case-container { display: flex; width: 100%; gap: 2%; margin-top: 40px; }
+        .use-case-card { width: 49%; background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 30px; overflow: hidden; }
+        .use-case-card h3 { display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .use-case-card h3 .icon { font-size: 2rem; text-shadow: none;}
+        .use-case-card p { margin-top: 15px; font-size: 1.1rem; line-height: 1.6; min-height: 100px; }
+        .benefit { margin-top: 20px; font-weight: 600; padding: 10px; border-radius: 10px; color: white; text-shadow: none; }
+        .benefit-revenue { background-color: var(--accent-green); }
+        .benefit-cost { background-color: var(--accent-red); }
+        .image-carousel { margin-top: 30px; width: 100%; display: flex; animation: scroll 40s linear infinite; }
+        .carousel-item { display: flex; flex-direction: column; align-items: center; width: 200px; margin: 0 10px; flex-shrink: 0; }
+        .carousel-caption { margin-top: 8px; font-size: 0.9rem; font-weight: 600; background: rgba(0, 0, 0, 0.5); padding: 4px 10px; border-radius: 12px; width: fit-content; white-space: nowrap; }
+        .carousel-img { width: 200px; height: 120px; object-fit: cover; border-radius: 10px; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-2200px); } }
+        
+        /* --- Installers & Output Uses Sections --- */
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; width: 100%; max-width: 1100px; margin-top: 40px; }
+        .info-card { background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 15px; text-align: center; }
+        .info-card .icon { font-size: 3rem; margin-bottom: 15px; text-shadow: none; }
+        .info-card h3 { font-size: 1.4rem; margin-bottom: 10px; }
+        #output-uses .info-card h3 { color: var(--oil-color); }
+        .info-card p { font-size: 1rem; opacity: 0.9; line-height: 1.6; }
+
+        /* --- Circular Economy Section --- */
+        #circular-economy { overflow: hidden; }
+        #circular-economy h2 { color: var(--light-text); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+        .flowchart-container { position: relative; width: 100%; max-width: 1000px; margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, auto); gap: 60px 100px; }
+        .flow-box { background: linear-gradient(105deg, #fff5d7, #e3d7ff); color: #212121; text-shadow: none; font-weight: 600; padding: 25px; border-radius: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; z-index: 2; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .flow-box:hover { transform: translateY(-8px) scale(1.03); box-shadow: 0 15px 30px rgba(0,0,0,0.25); }
+        .flowchart-arrows { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .flowchart-arrows path { fill: none; stroke: var(--light-text); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .flowchart-container.visible .flow-arrow-path { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw-arrow 1.5s ease-out forwards; }
+        @keyframes draw-arrow { to { stroke-dashoffset: 0; } }
+        #arrow-1 { animation-delay: 0.2s; } #arrow-2 { animation-delay: 0.4s; } #arrow-3 { animation-delay: 0.6s; } #arrow-4 { animation-delay: 0.8s; } #arrow-5 { animation-delay: 1.0s; } #arrow-curved { animation-delay: 1.2s; }
+        
+        /* --- Market Size Section --- */
+        #market-size .market-container { position: relative; width: 700px; height: 700px; display: flex; justify-content: center; align-items: center; }
+        .circle { position: absolute; border-radius: 50%; box-shadow: 0 5px 40px rgba(0,0,0,0.5); }
+        #tam { width: 100%; height: 100%; background: rgba(255, 193, 7, 0.1); } #sam { width: 78%; height: 78%; background: rgba(255, 193, 7, 0.2); } #som { width: 56%; height: 56%; background: rgba(255, 193, 7, 0.4); }
+        #capture { width: 32%; height: 32%; background: var(--oil-color); color: var(--dark-text); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px; text-align: center; }
+        #capture * { text-shadow: none; } #capture .label { font-size: 1.3rem; font-weight: 700; } #capture .value { font-size: 1.1rem; font-weight: 600; margin: 5px 0; } #capture .subtext { font-size: 0.9rem; }
+        .market-text { position: absolute; width: 100%; left: 50%; transform: translateX(-50%); color: var(--light-text); font-size: 1.2rem; display: flex; justify-content: center; align-items: baseline; gap: 12px; white-space: nowrap; }
+        .market-text .label, .market-text .value { font-weight: 700; } .market-text .subtext { font-weight: 400; opacity: 0.8; font-size: 1rem; }
+        .tam-text { top: 7%; } .sam-text { top: 19%; } .som-text { top: 31%; }
+
+        /* --- Revenue Streams Section --- */
+        #revenue .revenue-container { display: flex; flex-direction: column; align-items: center; gap: 40px; width: 100%; max-width: 1200px; margin-top: 40px; }
+        .rev-hub { text-align: center; transition-delay: 0s; }
+        .rev-hub-img { width: 150px; height: 150px; border: 4px solid var(--oil-color); border-radius: 50%; margin: 0 auto; overflow: hidden; box-shadow: 0 0 20px rgba(255, 193, 7, 0.3); }
+        .rev-hub-img img { width: 100%; height: 100%; object-fit: cover; }
+        .rev-hub h4 { font-weight: 600; font-size: 1.1rem; margin-top: 15px; }
+        .main-streams { display: flex; justify-content: center; gap: 40px; width: 100%; align-items: flex-start; }
+        .sales-group { display: flex; flex-direction: column; align-items: center; gap: 20px; transition-delay: 0.2s; }
+        .sub-streams { display: flex; justify-content: center; gap: 20px; width: 100%; }
+        .revenue-box { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; padding: 25px; border-radius: 15px; width: 320px; transition-delay: 0.2s; }
+        .revenue-box.sub-box { width: 250px; transition-delay: 0.4s; }
+        .revenue-box h3 { font-size: 1.25rem; color: var(--oil-color); margin-bottom: 10px; font-weight: 700; }
+        .revenue-box p { font-size: 0.95rem; line-height: 1.6; color: var(--light-text); text-shadow: none; opacity: 0.9; }
+
+        /* --- Customer Impact Section --- */
+        #customer-impact .impact-container { display: flex; justify-content: center; gap: 40px; width: 100%; max-width: 1200px; }
+        .impact-card { width: 30%; background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 15px; border-top: 5px solid var(--accent-green); }
+        .impact-card .icon { font-size: 3rem; color: var(--accent-green); margin-bottom: 20px; text-shadow: none;}
+        .impact-card h3 { font-size: 1.5rem; }
+
+        /* --- Competitors Section --- */
+        #competitors .patent-info { background: rgba(0,0,0,0.3); border: 2px dashed var(--oil-color); padding: 20px; border-radius: 10px; margin-top: 40px; max-width: 800px; }
+        .comparison-table { margin-top: 50px; width: 100%; max-width: 900px; border-collapse: collapse; }
+        .comparison-table th, .comparison-table td { padding: 15px; border: 1px solid rgba(255, 255, 255, 0.2); text-align: center; }
+        .comparison-table th { font-size: 1.2rem; }
+        .tick { color: var(--accent-green); font-size: 1.5rem; font-weight: bold; text-shadow: none;}
+        .cross { color: var(--accent-red); font-size: 1.5rem; font-weight: bold; text-shadow: none;}
+        
+        /* --- Cost Analysis Section (FINAL REVISED) --- */
+        #cost-analysis .analysis-container { display: flex; gap: 5%; width: 100%; max-width: 1200px; align-items: stretch; }
+        .analysis-card { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 15px; width: 47.5%; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .break-even-table { width: 100%; border-collapse: separate; border-spacing: 0 15px; }
+        .break-even-table th, .break-even-table td { padding: 15px; text-align: left; }
+        .break-even-table th { font-weight: 600; opacity: 0.8; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
+        .break-even-table .highlight-time { font-weight: 700; color: var(--oil-color); }
+        
+        .pie-chart-container { position: relative; width: 220px; height: 220px; margin: 20px auto; }
+        .pie-chart { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#4f4fff 0% 17.9%, #00bfff 17.9% 21.7%, #8b4513 21.7% 100%); animation: spin 1.5s cubic-bezier(0.5, 0, 0.5, 1) forwards; transform: scale(0); }
+        .reveal.visible .pie-chart { transform: scale(1); }
+        @keyframes spin { from { transform: scale(0); } to { transform: scale(1); } }
+        .pie-label { position: absolute; color: white; font-weight: 600; text-align: center; }
+        .label-used-oil { bottom: -40px; left: 50%; transform: translateX(-50%); }
+        .label-processing { top: 0; left: 105%; }
+        .label-electrical { top: 50%; right: 105%; transform: translateY(-50%); }
+        
+        .cost-table-v2 { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 20px; }
+        .cost-table-v2 td { padding: 15px; }
+        .cost-table-v2 td:first-child { background: linear-gradient(90deg, #ffc107, #ff9800); color: var(--dark-text); font-weight: 600; text-shadow: none; border-radius: 8px 0 0 8px; text-align: left; }
+        .cost-table-v2 td:last-child { background: linear-gradient(90deg, #64b5f6, #2196f3); color: var(--dark-text); font-weight: 700; text-shadow: none; border-radius: 0 8px 8px 0; text-align: right; }
+        
+        .profit-margin-final { font-size: 1.2rem; font-weight: 600; margin-top: 30px; text-align: center; }
+        .profit-margin-final span { font-size: 3rem; font-weight: 700; color: var(--accent-green); display: block; }
+        .reveal-row { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; transition-delay: var(--delay); }
+        .reveal.visible .reveal-row { opacity: 1; transform: translateY(0); }
+
+        /* --- Footer Section --- */
+        .site-footer { background-color: #0c0c0c; padding: 60px 5%; color: var(--light-text); }
+        .footer-container { display: flex; justify-content: space-between; max-width: 1200px; margin: 0 auto; gap: 40px; flex-wrap: wrap; }
+        .footer-col { flex: 1; min-width: 280px; text-align: left; }
+        .footer-col h4 { font-size: 1.4rem; margin-bottom: 20px; position: relative; display: inline-block; }
+        .footer-col h4::after { content: ''; display: block; width: 50px; height: 3px; background: var(--oil-color); margin-top: 8px; }
+        .footer-col p { opacity: 0.8; line-height: 1.7; margin-bottom: 25px; }
+        .footer-buttons { display: flex; flex-direction: column; gap: 15px; align-items: flex-start; }
+        .footer-btn { padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; color: white; text-shadow: none; transition: transform 0.3s ease, filter 0.3s ease; }
+        .btn-pitch { background: linear-gradient(90deg, #ffc107, #ff9800); }
+        .btn-demo { background: linear-gradient(90deg, #673ab7, #3f51b5); }
+        .footer-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        
+        .quick-links-list, .contact-info-list { list-style: none; }
+        .quick-links-list li, .contact-info-list li { margin-bottom: 12px; }
+        .quick-links-list a { color: var(--light-text); text-decoration: none; opacity: 0.8; transition: opacity 0.3s ease, color 0.3s ease; }
+        .quick-links-list a:hover { opacity: 1; color: var(--oil-color); }
+        .contact-info-list li { display: flex; align-items: center; gap: 15px; opacity: 0.9; }
+        .contact-info-list .icon { font-size: 1.2rem; color: var(--oil-color); text-shadow: none; }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 1100px) {
+            .main-streams, .sub-streams { flex-direction: column; align-items: center; }
+            #worries-solved .questions-grid { grid-template-columns: repeat(2, 1fr); }
+            .info-grid { grid-template-columns: 1fr; }
+            #cost-analysis .analysis-container { flex-direction: column; gap: 30px; }
+            .analysis-card { width: 100%; }
+        }
+
+        @media (max-width: 992px) {
+            h1 { font-size: 2.8rem; } h2 { font-size: 2.2rem; } .section { padding: 60px 5%; }
+            #problem-statement .stats-container, #problem-solution .container, #use-cases .use-case-container, #customer-impact .impact-container { flex-direction: column; }
+            .column, .use-case-card, .impact-card { width: 100%; }
+            #problem-solution .container, #use-cases .use-case-container, #customer-impact .impact-container { gap: 30px; }
+            #market-size .market-container { transform: scale(0.8); }
+            .flowchart-container { grid-template-columns: 1fr; gap: 50px; }
+            .flowchart-arrows { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            #market-size .market-container { transform: scale(0.7); }
+            .market-text { font-size: 1rem; gap: 8px; }
+            #worries-solved .questions-grid { grid-template-columns: 1fr; }
+            .footer-container { flex-direction: column; }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; } h2 { font-size: 1.8rem; }
+            #market-size .market-container { transform: scale(0.55); margin-top: -150px; margin-bottom: -150px;}
+            #solution-intro .flow-container { flex-direction: column; }
+            .io-box { width: 100%; margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="oil-fill-container"><svg id="oil-fill-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none"><defs><path id="wave-path" d="M0,160 C320,120,420,200,720,160 S1120,120,1440,160 L1440,320 L0,320 Z"></path></defs><use href="#wave-path" class="oil-wave"></use></svg></div>
+
+    <section id="hero" class="section">
+        <h1 class="reveal">Waste Oil Recycler</h1><p class="reveal" style="transition-delay: 0.2s; font-size: 1.2rem; max-width: 600px;">Turning waste into a valuable resource, one drop at a time.</p><img src="worimage.png" alt="Waste Oil Recycler Machine" class="recycler-image reveal" style="transition-delay: 0.4s;">
+    </section>
+
+    <section id="problem-statement" class="section">
+        <h2 class="reveal">The Scale of the Problem</h2><div class="stats-container"><div class="stat-card reveal" style="transition-delay: 0.2s;"><div style="font-size: 5rem; text-shadow: none;">🚗</div><div class="stat-number">5 Liters</div><div class="stat-text">Of waste oil is generated per car service.</div></div><div class="stat-card reveal" style="transition-delay: 0.4s;"><div style="font-size: 5rem; text-shadow: none;">🌍</div><div class="stat-number">4.3 Billion</div><div class="stat-text">Liters of used lubricant generated annually in India.</div></div><div class="stat-card reveal" style="transition-delay: 0.6s;"><div style="font-size: 5rem; text-shadow: none;">♻️</div><div class="stat-number">Only 39%</div><div class="stat-text">Of this massive volume is currently recycled.</div></div></div>
+    </section>
+
+    <section id="problem-solution" class="section">
+        <h2 class="reveal">Identifying the Gap, Delivering the Solution</h2><div class="container"><div class="column problem-col reveal" style="transition-delay: 0.2s;"><h3>The Problem</h3><ul><li><span class="icon">❌</span> A huge, untapped market gap in the Indian recycling sector.</li><li><span class="icon">❌</span> Recycling infrastructure is centralized and fails to reach the source of waste.</li><li><span class="icon">❌</span> Improper disposal leads to severe environmental pollution.</li></ul></div><div class="column solution-col reveal" style="transition-delay: 0.4s;"><h3>Our Mission</h3><ul><li><span class="icon">✅</span> We reach the grassroot level to collect and recycle oil at its source.</li><li><span class="icon">✅</span> Our technology effectively converts waste into usable, valuable products.</li><li><span class="icon">✅</span> We empower local businesses and create a circular economy.</li></ul></div></div>
+    </section>
+    
+    <section id="solution-intro" class="section">
+        <h2 class="reveal">Introducing Our Solution: The Recycler</h2><div class="flow-container reveal"><div class="io-box"><h3>INPUT</h3><div class="io-image"><img src="inputoil.png" alt="Used Dirty Engine Oil"></div><p>Used Engine Oil<br>Transmission Oil</p></div><div class="flow-arrow">➡️</div><div class="recycler-diagram" style="font-size: 8rem; text-shadow: none;">⚙️</div><div class="flow-arrow">➡️</div><div class="io-box"><h3>OUTPUT</h3><div class="io-image"><img src="outputoil.png" alt="Recycled Clean Fuel Oil"></div><p>Marine Oil<br>Heavy Fuel Oil</p></div></div>
+    </section>
+
+    <section id="worries-solved" class="section">
+        <h2 class="reveal">Sound Familiar?</h2>
+        <div class="questions-grid reveal">
+            <div class="question-card" style="--delay: 0.1s;"><span class="icon">🤢</span><p>Tired of messy oil spills and dirty storage drums cluttering your workspace?</p></div>
+            <div class="question-card" style="--delay: 0.2s;"><span class="icon">💸</span><p>Worried about hefty fines from environmental regulators for improper oil disposal?</p></div>
+            <div class="question-card" style="--delay: 0.3s;"><span class="icon">📉</span><p>Are you literally throwing away a potential source of secondary revenue every day?</p></div>
+            <div class="question-card" style="--delay: 0.4s;"><span class="icon">☣️</span><p>Struggling with the challenge of responsibly managing toxic used oil?</p></div>
+            <div class="question-card" style="--delay: 0.5s;"><span class="icon">⚕️</span><p>Concerned about the health risks for you and your staff from handling used oil?</p></div>
+            <div class="question-card" style="--delay: 0.6s;"><span class="icon">💧</span><p>Watching a valuable resource go to waste instead of being turned into profit?</p></div>
+        </div>
+        <p class="reassurance reveal" style="transition-delay: 0.8s;">Don't Worry. Your Oil is Now Our Responsibility.</p>
+        <h3 class="final-solution reveal" style="transition-delay: 1s;">The One-Stop Solution: <span class="highlight-text">Waste Oil Recycler</span></h3>
+    </section>
+    
+    <section id="use-cases" class="section">
+        <h2 class="reveal">Who Will Buy Our Project?</h2><div class="use-case-container reveal"><div class="use-case-card"><h3><span class="icon">🛠️</span> Local Garages & Service Centers</h3><p>Instead of discarding used engine oil, local vendors can repurpose it on-site, creating a powerful secondary source of revenue by selling the recycled product.</p><div class="benefit benefit-revenue">Secondary Source of Revenue</div><div class="image-carousel-wrapper"><div class="image-carousel"><div class="carousel-item"><img src="garage.jpg" alt="Local Garage" class="carousel-img"><div class="carousel-caption">Local Garage</div></div><div class="carousel-item"><img src="servicecenter.png" alt="Car Service Center" class="carousel-img"><div class="carousel-caption">Service Center</div></div><div class="carousel-item"><img src="tractor.png" alt="Agricultural Farm" class="carousel-img"><div class="carousel-caption">Agricultural Farms</div></div><div class="carousel-item"><img src="bus.png" alt="Bus Terminal" class="carousel-img"><div class="carousel-caption">Bus Terminals</div></div><div class="carousel-item"><img src="truck.png" alt="Truck Depot" class="carousel-img"><div class="carousel-caption">Truck Depots</div></div><div class="carousel-item"><img src="garage.jpg" alt="Local Garage" class="carousel-img"><div class="carousel-caption">Local Garage</div></div><div class="carousel-item"><img src="servicecenter.png" alt="Car Service Center" class="carousel-img"><div class="carousel-caption">Service Center</div></div><div class="carousel-item"><img src="tractor.png" alt="Agricultural Farm" class="carousel-img"><div class="carousel-caption">Agricultural Farms</div></div><div class="carousel-item"><img src="bus.png" alt="Bus Terminal" class="carousel-img"><div class="carousel-caption">Bus Terminals</div></div><div class="carousel-item"><img src="truck.png" alt="Truck Depot" class="carousel-img"><div class="carousel-caption">Truck Depots</div></div></div></div></div><div class="use-case-card"><h3><span class="icon">🏭</span> Large Industrial Areas</h3><p>For rail yards, shipyards, and construction sites, recycled oil can be used directly as fuel for machinery, drastically cutting down on operational fuel costs.</p><div class="benefit benefit-cost">Reduces Fuel Costs</div><div class="image-carousel-wrapper"><div class="image-carousel" style="animation-direction: reverse;"><div class="carousel-item"><img src="mining.png" alt="Mining Site" class="carousel-img"><div class="carousel-caption">Mining Sites</div></div><div class="carousel-item"><img src="construction.png" alt="Construction Site" class="carousel-img"><div class="carousel-caption">Construction Sites</div></div><div class="carousel-item"><img src="railway.png" alt="Railway Depot" class="carousel-img"><div class="carousel-caption">Railway Depots</div></div><div class="carousel-item"><img src="shipyard.png" alt="Port and Shipyard" class="carousel-img"><div class="carousel-caption">Ports & Shipyards</div></div><div class="carousel-item"><img src="industrial.png" alt="Industrial Zone" class="carousel-img"><div class="carousel-caption">Industrial Zones</div></div><div class="carousel-item"><img src="mining.png" alt="Mining Site" class="carousel-img"><div class="carousel-caption">Mining Sites</div></div><div class="carousel-item"><img src="construction.png" alt="Construction Site" class="carousel-img"><div class="carousel-caption">Construction Sites</div></div><div class="carousel-item"><img src="railway.png" alt="Railway Depot" class="carousel-img"><div class="carousel-caption">Railway Depots</div></div><div class="carousel-item"><img src="shipyard.png" alt="Port and Shipyard" class="carousel-img"><div class="carousel-caption">Ports & Shipyards</div></div><div class="carousel-item"><img src="industrial.png" alt="Industrial Zone" class="carousel-img"><div class="carousel-caption">Industrial Zones</div></div></div></div></div></div>
+    </section>
+
+    <section id="installers" class="section">
+        <h2 class="reveal">Who Will Install The Recycler?</h2><div class="info-grid reveal"><div class="info-card reveal" style="transition-delay: 0.1s;"><div class="icon">🚗</div><h3>OEM Service Centres</h3><p>Authorized service centers for 2, 3, 4, and multi-wheeler vehicles.</p></div><div class="info-card reveal" style="transition-delay: 0.2s;"><div class="icon">🔧</div><h3>Local & Machining Industries</h3><p>Local garages, independent oil recyclers, and machining workshops.</p></div><div class="info-card reveal" style="transition-delay: 0.3s;"><div class="icon">🚂</div><h3>Transport Hubs</h3><p>Large-scale operations like railway yards, shipyards, bus and truck depots.</p></div><div class="info-card reveal" style="transition-delay: 0.4s;"><div class="icon">🏗️</div><h3>Heavy Industry Sites</h3><p>Demanding environments such as construction and mining sites.</p></div></div>
+    </section>
+
+    <section id="output-uses" class="section">
+        <h2 class="reveal">Where Will The Output Fuel Be Used?</h2><div class="info-grid reveal"><div class="info-card reveal" style="transition-delay: 0.1s;"><div class="icon">🚢</div><h3>Marine Oil</h3><p>Used as LSFO, VLSFO, or ULSFO in ships and other water-vessels.</p></div><div class="info-card reveal" style="transition-delay: 0.2s;"><div class="icon">⚙️</div><h3>Heavy Fuel Oil</h3><p>Powers industrial engines, diesel generators, and heavy equipment machinery.</p></div><div class="info-card reveal" style="transition-delay: 0.3s;"><div class="icon">🔥</div><h3>Furnace Oil</h3><p>An efficient fuel source for various types of industrial furnaces.</p></div><div class="info-card reveal" style="transition-delay: 0.4s;"><div class="icon">🏭</div><h3>Bunker Fuel</h3><p>Ideal for use in large-scale industrial boilers for heat and power generation.</p></div></div>
+    </section>
+
+    <section id="circular-economy" class="section">
+        <h2 class="reveal">How is Oil Kept in the Circular Economy?</h2><div class="flowchart-container reveal"><svg class="flowchart-arrows" preserveAspectRatio="none" viewBox="0 0 1000 620"><defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#F5F5F5" /></marker></defs><path id="arrow-1" class="flow-arrow-path" d="M 225 115 L 225 185" marker-end="url(#arrowhead)"></path><path id="arrow-2" class="flow-arrow-path" d="M 775 115 L 775 185" marker-end="url(#arrowhead)"></path><path id="arrow-3" class="flow-arrow-path" d="M 775 330 L 775 400" marker-end="url(#arrowhead)"></path><path id="arrow-4" class="flow-arrow-path" d="M 450 250 L 550 250" marker-end="url(#arrowhead)"></path><path id="arrow-5" class="flow-arrow-path" d="M 550 465 L 450 465" marker-end="url(#arrowhead)" marker-start="url(#arrowhead)"></path><path id="arrow-curved" class="flow-arrow-path" d="M 775 520 Q 950 280, 450 60" marker-end="url(#arrowhead)"></path></svg><div class="flow-box reveal" style="transition-delay: 0.1s;">Building & Growing Our Network of Recyclers thereby Keeping Oil in the Circular Economy</div><div class="flow-box reveal" style="transition-delay: 0.2s;">Sales & Supply of Chemical Reagent Package for Oil Recycling</div><div class="flow-box reveal" style="transition-delay: 0.3s;">Reaching more & more sources of used oil</div><div class="flow-box reveal" style="transition-delay: 0.4s;">Installing our Recycler in all Major & Minor sites</div><div class="flow-box reveal" style="transition-delay: 0.5s;">Direct Supply Chain Network between Recycler-Installers & Fuel-purchasers</div><div class="flow-box reveal" style="transition-delay: 0.6s;">Revenue through Purchase & Sales of Processed Fuel</div></div>
+    </section>
+
+    <section id="market-size" class="section">
+        <h2 class="reveal">The Market Opportunity</h2><div class="market-container reveal"><div id="tam" class="circle"></div><div id="sam" class="circle"></div><div id="som" class="circle"></div><div class="market-text tam-text"><span class="label">TAM (India)</span><span class="value">₹19920 Crore</span><span class="subtext">Total Waste Oil Market</span></div><div class="market-text sam-text"><span class="label">SAM (West Bengal)</span><span class="value">₹1251 Crore</span><span class="subtext">6.3% of India</span></div><div class="market-text som-text"><span class="label">SOM</span><span class="value">₹16.9 Crore</span><span class="subtext">2.25% of SAM</span></div><div id="capture" class="circle"><span class="label">Initial Goal</span><span class="value">₹1.54 Cr</span><span class="subtext">0.2% of SAM</span></div></div>
+    </section>
+
+    <section id="customer-impact" class="section">
+        <h2 class="reveal">Creating Tangible Customer Value</h2><div class="impact-container"><div class="impact-card reveal" style="transition-delay: 0.2s;"><div class="icon">🌿</div><h3>Environmental Impact</h3><p>Eradicate toxic waste oil from the environment, preventing soil and water contamination.</p></div><div class="impact-card reveal" style="transition-delay: 0.4s;"><div class="icon">💰</div><h3>Economic Impact</h3><p>The final recycled product can be sold, creating a new, reliable secondary revenue stream for our customers.</p></div><div class="impact-card reveal" style="transition-delay: 0.6s;"><div class="icon">🤝</div><h3>Corporate Impact (EPR)</h3><p>Oil producers (e.g., Indian Oil, GS Caltex) can partner with us to fulfill their EPR, boosting their brand image as a green company.</p></div></div>
+    </section>
+
+    <section id="revenue" class="section">
+        <h2 class="reveal">Our Diverse Revenue Streams</h2>
+        <div class="revenue-container reveal">
+            <div class="rev-hub reveal">
+                <div class="rev-hub-img"><img src="worimage.png" alt="Waste Oil Recycler"></div>
+                <h4>Waste Oil Recycler</h4>
+            </div>
+            <div class="main-streams">
+                <div class="revenue-box reveal">
+                    <h3>Recycler on Wheels</h3>
+                    <p>A service model where we recycle oil for clients for a fee, lowering their entry barrier.</p>
+                </div>
+                <div class="sales-group reveal">
+                    <div class="revenue-box">
+                        <h3>Recycler Sales</h3>
+                        <p>Direct revenue from the sale of our modular recycling machines.</p>
+                    </div>
+                    <div class="sub-streams">
+                        <div class="revenue-box sub-box">
+                            <h3>Chemical & Upkeep Fees</h3>
+                            <p>Recurring revenue from patented chemicals required for the process.</p>
+                        </div>
+                        <div class="revenue-box sub-box">
+                            <h3>Servicing Cost</h3>
+                            <p>Annual maintenance contracts ensure machine longevity and performance.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="competitors" class="section">
+        <h2 class="reveal">Our Competitive Edge</h2><div class="patent-info reveal"><h3>💡 Groundbreaking, Modular Technology</h3><p>Our unique recycling process is built on a new kind of technology, which is currently **under a patenting process**. This modular approach allows recycling at the source, unlike large, centralized refineries where only 39% of waste oil reaches.</p></div><table class="comparison-table reveal"><thead><tr><th>Feature</th><th>Waste Oil Recycler</th><th>Traditional Refineries</th></tr></thead><tbody><tr><td>Temperature Hazard</td><td class="tick">Low ✓</td><td class="cross">High ✗</td></tr><tr><td>Air Pollution</td><td class="tick">Minimal ✓</td><td class="cross">Significant ✗</td></tr><tr><td>Operators Required</td><td class="tick">1 (Automated) ✓</td><td class="cross">Many ✗</td></tr><tr><td>Electrical Consumption</td><td class="tick">Low ✓</td><td class="cross">Very High ✗</td></tr><tr><td>Size & Portability</td><td class="tick">Portable ✓</td><td class="cross">Fixed & Massive ✗</td></tr><tr><td>Total Cost of Ownership</td><td class="tick">Low ✓</td><td class="cross">Extremely High ✗</td></tr></tbody></table>
+    </section>
+    
+    <section id="cost-analysis" class="section">
+        <h2 class="reveal">A Profitable Investment</h2>
+        <div class="analysis-container">
+            <div class="analysis-card reveal" style="transition-delay: 0.2s;">
+                <h3 style="text-align: center;">Break-Even Period</h3>
+                <table class="break-even-table">
+                    <thead>
+                        <tr class="reveal-row" style="--delay: 0.2s;">
+                            <th>Prototype</th>
+                            <th>Selling Price</th>
+                            <th>Break-Even Period</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="reveal-row" style="--delay: 0.4s;">
+                            <td>500ml version</td>
+                            <td>₹40,000</td>
+                            <td class="highlight-time">5 months 1 week</td>
+                        </tr>
+                        <tr class="reveal-row" style="--delay: 0.6s;">
+                            <td>5-liter version</td>
+                            <td>₹70,000</td>
+                            <td class="highlight-time">1 month 2 weeks</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="analysis-card reveal" style="transition-delay: 0.4s;">
+                <h3 style="text-align: center;">Impressive Profit Margins</h3>
+                <div class="pie-chart-container reveal-row" style="--delay: 0.2s;">
+                    <div class="pie-chart"></div>
+                    <div class="pie-label label-used-oil">Used-Oil: 500ml<br>₹17.50</div>
+                    <div class="pie-label label-processing">Processing cost<br>₹4.00</div>
+                    <div class="pie-label label-electrical">Electrical cost<br>₹0.85</div>
+                </div>
+                <table class="cost-table-v2">
+                    <tbody>
+                        <tr class="reveal-row" style="--delay: 0.4s;"><td>Processing Cost : 500ml</td><td>₹ 22.35</td></tr>
+                        <tr class="reveal-row" style="--delay: 0.5s;"><td>Selling Price : 500ml (@ ₹60/L)</td><td>₹ 30</td></tr>
+                        <tr class="reveal-row" style="--delay: 0.6s;"><td>Profit</td><td>34.23%</td></tr>
+                        <tr class="reveal-row" style="--delay: 0.7s;"><td>Less than Market rate by (@ ₹65/L)</td><td>7.69%</td></tr>
+                    </tbody>
+                </table>
+                <p class="profit-margin-final reveal-row" style="--delay: 0.8s;">Resulting Profit Margin: <span>34.23%</span></p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h4>Waste Oil Recycler</h4>
+                <p>Revolutionizing oil recycling with innovative technology that transforms used lubricants into valuable fuel oil, creating a sustainable circular economy.</p>
+                <div class="footer-buttons">
+                    <a href="#" class="footer-btn btn-pitch">WATCH PITCH VIDEO</a>
+                    <a href="#" class="footer-btn btn-demo">WATCH DEMO</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul class="quick-links-list">
+                    <li><a href="#problem-statement">The Crisis</a></li>
+                    <li><a href="#solution-intro">Our Solution</a></li>
+                    <li><a href="#use-cases">Use Cases</a></li>
+                    <li><a href="#market-size">Market Analysis</a></li>
+                    <li><a href="#revenue">Business Model</a></li>
+                    <li><a href="#competitors">Our Edge</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <ul class="contact-info-list">
+                    <li><span class="icon">👤</span> Adrija Ghosh (Team Lead)</li>
+                    <li><span class="icon">📧</span> adrijamethodist@gmail.com</li>
+                    <li><span class="icon">📞</span> 8777646581</li>
+                    <li><span class="icon">📍</span> Institute Of Engineering & Management, Kolkata</li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const revealElements = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); } });
+            }, { threshold: 0.1 });
+            revealElements.forEach(el => { observer.observe(el); });
+
+            const oilFillContainer = document.getElementById('oil-fill-container');
+            const windowHeight = window.innerHeight;
+            function handleScroll() {
+                const scrollTotal = document.documentElement.scrollHeight - windowHeight;
+                const scrollPosition = window.scrollY;
+                const scrollPercent = Math.min(scrollPosition / scrollTotal, 1);
+                oilFillContainer.style.height = `${scrollPercent * 100}%`;
+                const wavePath = document.getElementById('wave-path');
+                const waveAmplitude = 30, waveFrequency = 0.01;
+                const newD = `M0,${160 + Math.sin(scrollPosition * waveFrequency) * waveAmplitude} C320,${120 + Math.sin(scrollPosition * waveFrequency + 2) * waveAmplitude},420,${200 + Math.sin(scrollPosition * waveFrequency + 4) * waveAmplitude},720,160 S1120,${120 + Math.sin(scrollPosition * waveFrequency + 3) * waveAmplitude},1440,${160 + Math.sin(scrollPosition * waveFrequency + 1) * waveAmplitude} L1440,320 L0,320 Z`;
+                wavePath.setAttribute('d', newD);
+            }
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+        });
+    </script>
+</body>
+</html>
